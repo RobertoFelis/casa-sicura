@@ -1,6 +1,6 @@
 // Service worker: fa funzionare l'app anche senza connessione.
 // Cambiare VERSION a ogni rilascio per aggiornare la copia salvata.
-const VERSION = 'shk-v1';
+const VERSION = 'shk-v2';
 const CORE = [
   './', 'index.html', 'content.js', 'pages.js', 'house3d.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png',

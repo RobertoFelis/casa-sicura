@@ -20,6 +20,8 @@
   --paper:#FFF6E9; --card:#FFFFFF; --ink:#2E3A59; --soft:#6E7690; --line:#EFE3D0;
   --teal:#21A99A; --teal-l:#D9F4F0; --coral:#FF7062; --coral-l:#FFE4E0;
   --sun:#FFC23D; --sun-l:#FFF1CC; --lav:#8E7CF0; --lav-l:#ECE8FF; --sky:#BFE6FF;
+  /* spazio sopra la barra di navigazione del telefono, anche quando il browser la riporta a 0 */
+  --sb:max(20px, env(safe-area-inset-bottom));
   --pop:0 5px 0 var(--ink); --pop-s:0 3px 0 var(--ink); --bd:3px solid var(--ink);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -97,7 +99,7 @@ h1,h2,h3,h4,p{margin:0}
 .floors button small{font-size:.62rem;font-weight:600}
 .floors button.on{background:var(--sun)}
 .floors button:active{transform:translateY(3px);box-shadow:none}
-.hcard{position:absolute;left:12px;right:84px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:4;max-width:560px;padding:12px;animation:popin .35s cubic-bezier(.3,1.6,.5,1)}
+.hcard{position:absolute;left:12px;right:84px;bottom:calc(12px + var(--sb));z-index:4;max-width:560px;padding:12px;animation:popin .35s cubic-bezier(.3,1.6,.5,1)}
 .hc-hint{display:flex;align-items:center;gap:12px}
 .hc-hint .hc-me{width:56px;flex:none}
 .hc-hint p{font-size:1rem;line-height:1.3}
@@ -196,7 +198,7 @@ h1,h2,h3,h4,p{margin:0}
 .qbox{padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--lav-l)}
 .qhead{font-weight:700;font-size:1.1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .okbadge{font-size:.75rem;background:var(--teal);color:#fff;border:2px solid var(--ink);border-radius:99px;padding:2px 8px}
-.pnav{display:flex;align-items:center;gap:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+.pnav{display:flex;align-items:center;gap:14px;padding-bottom:calc(14px + var(--sb))}
 .pnav .dots{flex:1;display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
 .pnav .dots i{width:11px;height:11px;border-radius:50%;background:#E5D8C2;border:2px solid var(--ink);transition:all .3s}
 .pnav .dots i.ok{background:var(--teal)}
@@ -215,7 +217,7 @@ h1,h2,h3,h4,p{margin:0}
 .track .who{position:absolute;top:50%;left:0;width:42px;transform:translate(-50%,-66%);transition:left .6s cubic-bezier(.4,1.4,.5,1)}
 .track .end{position:absolute;right:-14px;top:50%;transform:translateY(-55%);font-size:1.6rem}
 .stage{display:flex;flex-direction:column;gap:14px;flex:1}
-.gfoot{padding:10px 0 calc(16px + env(safe-area-inset-bottom));display:flex;justify-content:center}
+.gfoot{padding:10px 0 calc(16px + var(--sb));display:flex;justify-content:center}
 .gfoot:empty{display:none}
 
 /* scelte */
@@ -340,7 +342,7 @@ h1,h2,h3,h4,p{margin:0}
 /* ---------- finestre ---------- */
 .modal{position:fixed;inset:0;background:rgba(46,58,89,.4);z-index:60;display:none;align-items:flex-end;justify-content:center}
 .modal.show{display:flex}
-.modal .box{background:var(--paper);border:var(--bd);border-bottom:0;border-radius:28px 28px 0 0;width:100%;max-width:640px;max-height:92dvh;overflow:auto;padding:22px 16px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;animation:up .35s cubic-bezier(.3,1.3,.5,1)}
+.modal .box{background:var(--paper);border:var(--bd);border-bottom:0;border-radius:28px 28px 0 0;width:100%;max-width:640px;max-height:92dvh;overflow:auto;padding:22px 16px calc(20px + var(--sb));display:flex;flex-direction:column;gap:14px;animation:up .35s cubic-bezier(.3,1.3,.5,1)}
 @keyframes up{from{transform:translateY(100%)}}
 .modal h3{font-size:1.5rem;font-weight:700;text-align:center}
 .sect{background:var(--card);border:var(--bd);border-radius:22px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
@@ -411,7 +413,7 @@ body.talking .mascot .whole{animation:talkbob .36s ease-in-out infinite alternat
 @media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
 /* ---------- invito a installare l'app ---------- */
-.install{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:90;max-width:520px;margin:0 auto;display:flex;align-items:center;gap:12px;background:var(--card);border:var(--bd);border-radius:22px;box-shadow:var(--pop);padding:12px 14px;animation:slideup .45s cubic-bezier(.3,1.4,.5,1)}
+.install{position:fixed;left:12px;right:12px;bottom:calc(12px + var(--sb));z-index:90;max-width:520px;margin:0 auto;display:flex;align-items:center;gap:12px;background:var(--card);border:var(--bd);border-radius:22px;box-shadow:var(--pop);padding:12px 14px;animation:slideup .45s cubic-bezier(.3,1.4,.5,1)}
 .install img{width:56px;height:56px;border-radius:14px;border:2px solid var(--ink);flex:none}
 .install .tx{flex:1;min-width:0;line-height:1.25}
 .install .tx b{display:block;font-size:1.05rem}
