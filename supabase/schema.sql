@@ -150,3 +150,9 @@ revoke execute on function public.my_kid, public.create_group, public.join_group
   public.my_groups, public.leaderboard_global, public.leaderboard_group, public.delete_my_account from public, anon;
 grant execute on function public.my_kid, public.create_group, public.join_group, public.leave_group,
   public.my_groups, public.leaderboard_global, public.leaderboard_group, public.delete_my_account to authenticated;
+
+-- ---------- Accesso semplice (solo soprannome) ----------
+-- Ogni dispositivo ha un utente anonimo con un profilo: in classifica si vede il soprannome
+alter table public.kids alter column public_rank set default true;
+update public.kids set public_rank = true;
+create unique index if not exists kids_nick on public.kids (lower(nickname));
