@@ -1,4 +1,4 @@
-# Casa Sicura – Libro interattivo
+# SafeHome Kids – Libro interattivo
 
 Libro-gioco per bambini sulla sicurezza in casa e nei dintorni: casa 3D esplorabile, 140 argomenti in 14 zone (ognuno in 5 pagine: racconto, perché è pericoloso, cosa fare, una storia, quiz), giochi finali, album di adesivi, voce italiana.
 
