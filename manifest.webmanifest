@@ -1,0 +1,17 @@
+{
+  "name": "SafeHome Kids",
+  "short_name": "SafeHome Kids",
+  "description": "Il libro-gioco per scoprire come stare al sicuro in casa e nei dintorni.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFF6E9",
+  "theme_color": "#21A99A",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

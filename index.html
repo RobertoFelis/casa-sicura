@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#FFF6E9">
 <title>SafeHome Kids – Libro interattivo</title>
+<meta name="description" content="Il libro-gioco per scoprire come stare al sicuro in casa e nei dintorni.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SafeHome Kids">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -401,6 +409,17 @@ body.talking .mascot .whole{animation:talkbob .36s ease-in-out infinite alternat
 @keyframes wave{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(18deg)}}
 @keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-12%) rotate(4deg)}}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
+/* ---------- invito a installare l'app ---------- */
+.install{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:90;max-width:520px;margin:0 auto;display:flex;align-items:center;gap:12px;background:var(--card);border:var(--bd);border-radius:22px;box-shadow:var(--pop);padding:12px 14px;animation:slideup .45s cubic-bezier(.3,1.4,.5,1)}
+.install img{width:56px;height:56px;border-radius:14px;border:2px solid var(--ink);flex:none}
+.install .tx{flex:1;min-width:0;line-height:1.25}
+.install .tx b{display:block;font-size:1.05rem}
+.install .tx small{color:var(--soft);font-size:.88rem}
+.install .btn{padding:9px 16px;font-size:1rem;flex:none}
+.install .x{position:absolute;top:-12px;right:-8px;width:32px;height:32px;border-radius:50%;background:var(--card);border:2px solid var(--ink);font-size:.9rem;display:grid;place-items:center}
+.install .ios{display:inline-block;background:var(--sky);border:2px solid var(--ink);border-radius:8px;padding:0 5px;font-weight:700}
+@keyframes slideup{from{transform:translateY(140%)}to{transform:none}}
 </style>
 </head>
 <body>
@@ -1275,6 +1294,41 @@ if('speechSynthesis' in window) speechSynthesis.getVoices();
 initHome();
 // Al primo avvio si sceglie il personaggio, poi si va dritti alla casa
 if(charId){ renderHome(); show('home'); } else { renderPick(); show('pick'); }
+
+/* ============ APP INSTALLABILE ============ */
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+// Dal telefono, se l'app non è già installata, proponiamo di metterla sulla schermata Home
+(()=>{
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  // se l'utente chiude l'invito, lo riproponiamo dopo 3 giorni
+  const later = store.get('installLater', 0);
+  if(standalone || !mobile || Date.now() < later) return;
+  let deferred = null;
+  function banner(html, onOk){
+    if($('#install')) return;
+    document.body.insertAdjacentHTML('beforeend', `<div class="install" id="install" role="dialog" aria-label="Installa l'app">
+      <button class="x" id="instNo" aria-label="Non ora">✕</button>
+      <img src="icons/icon-192.png" alt="">
+      <div class="tx"><b>Scarica SafeHome Kids!</b><small>${html}</small></div>
+      ${onOk?'<button class="btn" id="instOk">Installa</button>':''}</div>`);
+    $('#instNo').onclick = ()=>{ store.set('installLater', Date.now()+3*864e5); $('#install').remove(); };
+    if(onOk) $('#instOk').onclick = onOk;
+  }
+  window.addEventListener('beforeinstallprompt', e=>{
+    e.preventDefault(); deferred = e;
+    banner('Gioca quando vuoi, anche senza internet.', async ()=>{
+      deferred.prompt();
+      const r = await deferred.userChoice; deferred = null;
+      $('#install')?.remove();
+      if(r.outcome!=='accepted') store.set('installLater', Date.now()+3*864e5);
+    });
+  });
+  window.addEventListener('appinstalled', ()=>$('#install')?.remove());
+  // Su iPhone e iPad il browser non ha un pulsante "Installa": spieghiamo come fare
+  if(ios) setTimeout(()=>banner('Tocca <span class="ios">Condividi ⬆︎</span> e poi <b>“Aggiungi alla schermata Home”</b>.'), 1500);
+})();
 </script>
 </body>
 </html>
