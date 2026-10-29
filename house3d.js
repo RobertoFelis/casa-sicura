@@ -8,7 +8,7 @@
     bagno:     { f: 0, x: -4, z: 2 },
     ingresso:  { f: 0, x: 0, z: 2 },
     soggiorno: { f: 0, x: 4, z: 2 },
-    garage:    { f: 0, x: -4, z: -2 },
+    garage:    { f: -1, x: -10, z: -2.8, r: 13 },
     cucina:    { f: 0, x: 0, z: -2 },
     animali:   { f: 0, x: 4, z: -2 },
     cameretta: { f: 1, x: -4, z: 0 },
@@ -111,21 +111,20 @@
 
     // vialetto pedonale + vialetto del garage
     pick(box(O, 2.4, .1, 7.4, 0xE8D9BF, 0, -.25, 7.9), 'vialetto');
-    pick(box(O, 4, .1, 4, 0xC9C3B6, -8, -.25, -2), 'vialetto');
-    pick(box(O, 3.4, .1, 12.6, 0xC9C3B6, -8.3, -.25, 5.7), 'vialetto');
+    pick(box(O, 3.4, .1, 12.6, 0xC9C3B6, -10, -.25, 5.7), 'vialetto');
     // recinzione con cancelli
     const fence = (x1, x2) => {
       for (let x = x1; x <= x2; x += .7) box(O, .14, 1, .14, 0xffffff, x, -.2, 11.2);
       box(O, x2 - x1, .12, .1, 0xffffff, (x1 + x2) / 2, .5, 11.2);
     };
-    fence(-30, -10.2); fence(-6.4, -1.4); fence(1.4, 30);
-    const gate = group(O, -8.3, 0, 11.2);
+    fence(-30, -11.9); fence(-8.1, -1.4); fence(1.4, 30);
+    const gate = group(O, -10, 0, 11.2);
     for (let i = 0; i < 6; i++) box(gate, .1, 1.2, .1, 0x3A4766, -1.5 + i * .6, -.2, 0);
     box(gate, 3.4, .14, .14, 0x3A4766, 0, .9, 0);
     box(gate, 3.4, .14, .14, 0x3A4766, 0, .1, 0);
-    anims.push((t) => { gate.position.x = -8.3 - Math.max(0, Math.sin(t * .35)) * 3.2; }); // cancello automatico
-    box(O, .2, 1.4, .2, 0xFFC23D, -10.1, -.2, 11.2);
-    ball(O, .14, 0xFF7062, -10.1, 1.32, 11.2).userData.blink = true;
+    anims.push((t) => { gate.position.x = -10 - Math.max(0, Math.sin(t * .35)) * 3.2; }); // cancello automatico
+    box(O, .2, 1.4, .2, 0xFFC23D, -11.8, -.2, 11.2);
+    ball(O, .14, 0xFF7062, -11.8, 1.32, 11.2).userData.blink = true;
     box(O, .9, 1.1, .3, 0xE8604C, 2.2, -.2, 11); // cassetta posta
     emo(O, '🚶', 3.5, -.2, 12, 1.2);
     // auto parcheggiata
@@ -141,7 +140,6 @@
       ball(g, .14, 0xFFF3A0, -.55, .6, 1.72, { ol: false }); ball(g, .14, 0xFFF3A0, .55, .6, 1.72, { ol: false });
       return g;
     }
-    car(O, 0xFF7062, -8.3, 3.5);
     const runner = car(O, 0x4FA3F7, 0, 13.6, Math.PI / 2);
     anims.push((t) => { runner.position.x = ((t * 6) % 80) - 40; });
     const runner2 = car(O, 0xFFC23D, 0, 15.6, -Math.PI / 2);
@@ -257,13 +255,13 @@
 
     /* ---- piano terra ---- */
     floorTile(F0, 'bagno', -4, 2, 4, 4); floorTile(F0, 'ingresso', 0, 2, 4, 4); floorTile(F0, 'soggiorno', 4, 2, 4, 4);
-    floorTile(F0, 'garage', -4, -2, 4, 4); floorTile(F0, 'cucina', 0, -2, 4, 4); floorTile(F0, 'animali', 4, -2, 4, 4);
+    floorTile(F0, 'bagno', -4, -2, 4, 4); floorTile(F0, 'cucina', 0, -2, 4, 4); floorTile(F0, 'animali', 4, -2, 4, 4);
     let w;
     w = extWall(F0, -6, 4, 6, 4, 0, 1);
     opening(w, 0, 0, 1.2, 2.2, 0x9A6A3F); opening(w, -4, 1.1, 1.4, 1.1, 0xBDEBFF); opening(w, 4, 1.1, 1.8, 1.2, 0xBDEBFF);
     w = extWall(F0, -6, -4, 6, -4, 0, -1); opening(w, 0, 1.2, 1.6, 1, 0xBDEBFF); opening(w, 4, 1.2, 1.2, 1, 0xBDEBFF);
     opening(w, -2, 0, 1, 2.1, 0x9A6A3F); // porta sul cortile
-    w = extWall(F0, -6, -4, -6, 4, -1, 0); opening(w, -2, 0, 3.2, 2.4, 0xB9C2D0); opening(w, 2, 1.2, 1.2, 1, 0xBDEBFF);
+    w = extWall(F0, -6, -4, -6, 4, -1, 0); opening(w, -2, 1.2, 1.2, 1, 0xBDEBFF); opening(w, 2, 1.2, 1.2, 1, 0xBDEBFF);
     w = extWall(F0, 6, -4, 6, 4, 1, 0); opening(w, 2, 1.2, 1.4, 1, 0xBDEBFF); opening(w, -2.6, 0, 1, 2.1, 0x9A6A3F);
     lowWall(F0, -2, -4, -2, -2.6); lowWall(F0, -2, -1.4, -2, 1.4); lowWall(F0, -2, 2.6, -2, 4);
     lowWall(F0, 2, -4, 2, -2.6); lowWall(F0, 2, -1.4, 2, 1.4); lowWall(F0, 2, 2.6, 2, 4);
@@ -291,10 +289,23 @@
     anims.push((t) => { tvScreen.material = M([0x46C6F0, 0x7FE08A, 0xFFC23D][Math.floor(t / 1.5) % 3]); });
     cyl(F0, .05, .05, 1.5, 0x2E3A59, 5.6, 0, 1); const shade = cyl(F0, .2, .35, .4, 0xFFE08A, 5.6, 1.4, 1);
     box(F0, .3, .2, .3, 0xffffff, 2.5, 0, 1.2); emo(F0, '🔌', 2.15, .2, 1.8, .4);
-    // garage
-    box(F0, 2.4, .9, .7, 0x9A6A3F, -4, 0, -3.5); emo(F0, '🔧', -4.5, .9, -3.5, .5); emo(F0, '🔨', -3.6, .9, -3.5, .5);
-    box(F0, .5, 1.8, 1.4, 0x8A94A8, -2.5, 0, -3.1); emo(F0, '🪣', -2.5, 1.8, -3.1, .45);
-    emo(F0, '🚲', -4.5, 0, -1.2, 1.3); emo(F0, '🪜', -2.6, 0, -.6, 1.1);
+    // lavanderia (fa parte del bagno)
+    box(F0, 2.4, .9, .6, 0xffffff, -4.2, 0, -3.6); emo(F0, '🧴', -4.8, .9, -3.6, .45); emo(F0, '🧺', -3.8, .9, -3.6, .5);
+    box(F0, 1.2, .08, .5, 0x9AA3B5, -4.6, .9, -1.4, { ol: false }); emo(F0, '👕', -4.6, .98, -1.4, .55); emo(F0, '🧹', -2.6, 0, -.8, 1);
+
+    // garage staccato dalla casa, in fondo al vialetto delle auto
+    const GA = group(O, -10, 0, -2.8);
+    pick(box(GA, 4.2, .2, 4.4, parseInt(rooms.find(r => r.id === 'garage').color.slice(1), 16), 0, -.2, 0), 'garage');
+    extWall(GA, -2.1, -2.2, 2.1, -2.2, 0, -1);
+    extWall(GA, -2.1, -2.2, -2.1, 2.2, -1, 0);
+    extWall(GA, 2.1, -2.2, 2.1, 2.2, 1, 0);
+    w = extWall(GA, -2.1, 2.2, 2.1, 2.2, 0, 1);
+    opening(w, 0, 2, 3.2, .8, 0xB9C2D0); // porta basculante alzata
+    box(ROOF, 4.6, .25, 4.8, 0xB0503F, -10, 3, -2.8);
+    car(GA, 0xFF7062, -.5, .2);
+    box(GA, .6, .9, 3, 0x9A6A3F, 1.6, 0, -.2); emo(GA, '🔧', 1.6, .9, -1, .5); emo(GA, '🔨', 1.6, .9, .2, .5); emo(GA, '🪣', 1.6, .9, 1.1, .45);
+    box(GA, .4, .9, .6, 0xE8604C, 1.5, 0, -1.8); // tanica
+    emo(GA, '🚲', -1.6, 0, -1.9, 1.1); emo(GA, '🪜', 1.7, 0, 1.8, 1);
     // cucina
     box(F0, 3.8, .9, .7, 0xffffff, 0, 0, -3.55); box(F0, 3.8, .08, .75, 0x21A99A, 0, .9, -3.55, { ol: false });
     box(F0, .8, .02, .55, 0x2E3A59, -.4, .98, -3.55, { ol: false });
