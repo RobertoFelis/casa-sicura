@@ -831,14 +831,14 @@ const pinHTML = r => { const d=doneIn(r);
 function initHome(){
   try{
     h3d = window.House3D ? House3D.create($('#h3d'), { rooms:ROOMS, pinHTML,
-      onSelect:id=>{ selRoom=id; tone('beep'); renderCard(); },
+      onSelect:id=>{ selRoom=id; tone('beep'); renderCard(); syncFloors(h3d.getFloor()); },
       onFloor:syncFloors }) : null;
   }catch(e){ console.error(e); h3d=null; $('#h3d').innerHTML=''; }
   if(!h3d) document.body.classList.add('no3d');
 }
-function syncFloors(f){ document.querySelectorAll('[data-floor]').forEach(b=>b.classList.toggle('on', b.dataset.floor===f)); }
+function syncFloors(f){ document.querySelectorAll('[data-floor]').forEach(b=>b.classList.toggle('on', b.dataset.floor===f)); $('#viewAll').classList.toggle('on', f==='all'); }
 document.querySelectorAll('[data-floor]').forEach(b=>b.onclick=()=>{ h3d.setFloor(b.dataset.floor); tone('beep'); });
-$('#viewAll').onclick = ()=>{ h3d.overview(); selRoom=null; renderCard(); };
+$('#viewAll').onclick = ()=>{ h3d.overview(); selRoom=null; renderCard(); syncFloors('all'); tone('beep'); };
 $('#albumBtn').onclick = ()=>{ renderAlbum(); show('album'); };
 $('#listBtn').onclick = ()=>{ $('#listBody').innerHTML=listHTML(); bindZones($('#listBody')); $('#listModal').classList.add('show'); };
 

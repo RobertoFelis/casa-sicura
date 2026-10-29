@@ -506,7 +506,8 @@
     function overview() {
       selected = null; selRing.visible = false;
       for (const k in pins) pins[k].el.classList.remove('sel');
-      flyTo(0, 1.5, 1, 30, .55, 1.0);
+      // più lontano e più dall'alto della vista iniziale, così si vede tutta la casa con il cortile
+      flyTo(0, 1.5, 1, 44, .55, .7);
     }
 
     /* ================= CICLO ================= */
