@@ -382,6 +382,9 @@ h1,h2,h3,h4,p{margin:0}
 /* ---------- account e classifiche ---------- */
 .field{width:100%;font:inherit;font-size:1.05rem;padding:11px 14px;border:var(--bd);border-radius:16px;background:var(--paper);color:var(--ink);min-width:0}
 .field:focus{outline:3px solid var(--sun);outline-offset:1px}
+.nickbox{display:flex;flex-direction:column;gap:6px;width:100%;max-width:760px;margin:0 auto 14px;text-align:left}
+.nickbox label{font-weight:600;font-size:1.05rem}
+.nickbox .note,.nickbox .err{margin:0}
 .consent{display:flex;gap:10px;align-items:flex-start;font-size:.92rem;line-height:1.35}
 .consent input{width:22px;height:22px;flex:none;margin-top:1px;accent-color:var(--teal)}
 .consent a,.sect a{color:var(--teal);font-weight:600}
@@ -610,7 +613,7 @@ body.talking .mascot .whole{animation:talkbob .36s ease-in-out infinite alternat
       <button class="btn ghost" id="resetBtn" style="padding:10px 16px">Azzera</button></div>
   </div>
   <div class="sect">
-    <div class="row"><span class="grow"><h4>👨‍👩‍👧 Area genitori</h4><span class="note">Profili, classifiche, privacy e dati</span></span>
+    <div class="row"><span class="grow"><h4>🏆 Il mio profilo</h4><span class="note">Soprannome, classifica e dati</span></span>
       <button class="btn ghost" id="parentBtn" style="padding:10px 16px">Apri</button></div>
   </div>
   <button class="btn big" data-close>Fatto</button>

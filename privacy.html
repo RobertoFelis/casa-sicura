@@ -27,11 +27,11 @@ td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertic
 <section>
 <h2>In breve</h2>
 <ul>
-<li>Il gioco funziona <b>senza account</b>: in quel caso i progressi restano solo sul tuo dispositivo.</li>
-<li>L'account è <b>solo per i genitori</b> (o chi ne fa le veci) e serve per salvare i progressi e partecipare alle classifiche.</li>
-<li>Dei bambini conosciamo <b>solo un soprannome</b> scelto da te, la mascotte e i progressi nel gioco. Niente nome vero, età, foto, posizione o contatti.</li>
+<li><b>Niente email, niente password</b>: per giocare basta scegliere un <b>soprannome</b>.</li>
+<li>Conosciamo solo il soprannome, la mascotte scelta e i progressi nel gioco. Niente nome vero, età, foto, posizione o contatti.</li>
+<li>Il soprannome e i punti compaiono nelle classifiche.</li>
 <li>Nessuna pubblicità, nessun tracciamento, nessuna profilazione, nessuna vendita di dati.</li>
-<li>Puoi scaricare o cancellare tutti i dati quando vuoi dall'<b>Area genitori</b>.</li>
+<li>Puoi scaricare o cancellare i tuoi dati quando vuoi da <b>⚙️ → Il mio profilo</b>.</li>
 </ul>
 </section>
 
@@ -44,28 +44,27 @@ td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertic
 <h2>Quali dati trattiamo e perché</h2>
 <table>
 <tr><th>Dato</th><th>Perché</th><th>Base giuridica</th></tr>
-<tr><td>Email del genitore</td><td>Accedere all'account con un link (senza password)</td><td>Esecuzione del servizio richiesto (art. 6.1.b GDPR)</td></tr>
-<tr><td>Soprannome e mascotte del bambino</td><td>Riconoscere il profilo e mostrarlo nelle classifiche</td><td>Consenso del genitore (art. 6.1.a e art. 8 GDPR)</td></tr>
-<tr><td>Progressi (adesivi, stelle, punti)</td><td>Salvare il gioco e calcolare le classifiche</td><td>Consenso del genitore (art. 6.1.a e art. 8 GDPR)</td></tr>
-<tr><td>Gruppi di cui fa parte il profilo</td><td>Classifica con amici, famiglia o classe</td><td>Consenso del genitore</td></tr>
+<tr><td>Soprannome e mascotte</td><td>Riconoscere il giocatore e mostrarlo nelle classifiche</td><td>Esecuzione del servizio richiesto (art. 6.1.b GDPR)</td></tr>
+<tr><td>Progressi (adesivi, stelle, punti)</td><td>Salvare il gioco e calcolare le classifiche</td><td>Esecuzione del servizio richiesto (art. 6.1.b GDPR)</td></tr>
+<tr><td>Gruppi di cui fai parte</td><td>Classifica con amici, famiglia o classe</td><td>Esecuzione del servizio richiesto (art. 6.1.b GDPR)</td></tr>
+<tr><td>Un codice anonimo del dispositivo</td><td>Collegare il dispositivo al suo profilo, senza email né password</td><td>Esecuzione del servizio richiesto (art. 6.1.b GDPR)</td></tr>
 <tr><td>Dati tecnici (indirizzo IP, orari di accesso) nei registri dei fornitori</td><td>Sicurezza e funzionamento del servizio</td><td>Legittimo interesse (art. 6.1.f GDPR)</td></tr>
 </table>
-<p>Il consenso si dà al momento della registrazione e si può revocare in ogni momento cancellando il profilo o l'account.</p>
 </section>
 
 <section>
 <h2>Chi vede cosa</h2>
 <ul>
-<li><b>Classifica del gruppo</b>: la vedono solo i profili entrati nello stesso gruppo con il codice di invito. Mostra soprannome, mascotte e punti.</li>
-<li><b>Classifica del mondo</b>: è <b>spenta</b> finché un genitore non la accende per quel profilo. Mostra soprannome, mascotte e punti.</li>
-<li>L'email del genitore non è mai visibile ad altri utenti.</li>
+<li><b>Classifica del mondo</b>: mostra soprannome, mascotte e punti. È attiva all'inizio e si può spegnere in ⚙️ → Il mio profilo.</li>
+<li><b>Classifica degli amici</b>: la vedono solo i giocatori entrati nello stesso gruppo con il codice di invito.</li>
+<li>Il soprannome è unico: due giocatori non possono avere lo stesso.</li>
 </ul>
 </section>
 
 <section>
 <h2>Dove sono i dati e chi ci aiuta</h2>
 <ul>
-<li><b>Supabase</b> (database e accesso): server nell'Unione Europea. Agisce come responsabile del trattamento.</li>
+<li><b>Supabase</b> (database): server nell'Unione Europea. Agisce come responsabile del trattamento.</li>
 <li><b>Netlify</b> (pubblicazione del sito): riceve i dati tecnici delle visite. Può trasferire dati negli Stati Uniti con le garanzie previste dal GDPR (Data Privacy Framework e clausole contrattuali standard).</li>
 <li>Caratteri e librerie sono inclusi nell'app: non vengono caricati da altri siti.</li>
 </ul>
@@ -73,23 +72,24 @@ td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertic
 
 <section>
 <h2>Per quanto tempo</h2>
-<p>Finché l'account resta attivo. Quando cancelli un profilo o l'account, i dati vengono eliminati subito dal database. Le copie di sicurezza dei fornitori si cancellano entro i loro tempi tecnici.</p>
+<p>Finché non cancelli il profilo. Quando lo cancelli, i dati vengono eliminati subito dal database; le copie di sicurezza dei fornitori si cancellano entro i loro tempi tecnici.</p>
+<p>Il profilo è legato al dispositivo e al browser: se cancelli i dati del browser o cambi dispositivo, non si può recuperare.</p>
 </section>
 
 <section>
 <h2>Cosa resta sul dispositivo</h2>
-<p>L'app salva nel browser (memoria locale) i progressi, le impostazioni di suoni e voce e, se hai fatto l'accesso, la sessione. Non usiamo cookie di profilazione né strumenti di statistica.</p>
+<p>L'app salva nel browser (memoria locale) i progressi, il soprannome, le impostazioni di suoni e voce e il codice anonimo della sessione. Non usiamo cookie di profilazione né strumenti di statistica.</p>
 </section>
 
 <section>
 <h2>I tuoi diritti</h2>
-<p>Puoi chiedere accesso, rettifica, cancellazione, limitazione, portabilità dei dati e opporti al trattamento. Molte cose le puoi fare da solo nell'Area genitori (⚙️ → Area genitori): scaricare i dati, spegnere la classifica del mondo, cancellare un profilo o l'intero account. Per il resto scrivi al contatto indicato sopra.</p>
+<p>Puoi chiedere accesso, rettifica, cancellazione, limitazione, portabilità dei dati e opporti al trattamento. Molte cose le puoi fare da solo in ⚙️ → Il mio profilo: cambiare soprannome, scaricare i dati, spegnere la classifica del mondo, cancellare il profilo. Per il resto scrivi al contatto indicato sopra.</p>
 <p>Hai anche diritto di presentare reclamo al <a href="https://www.garanteprivacy.it" target="_blank" rel="noopener">Garante per la protezione dei dati personali</a>.</p>
 </section>
 
 <section>
-<h2>Bambini</h2>
-<p>Il gioco è pensato per bambini, ma l'account lo crea e lo gestisce sempre un adulto. In Italia, sotto i 14 anni serve il consenso di chi esercita la responsabilità genitoriale. Ti chiediamo di non usare il vero nome del bambino come soprannome.</p>
+<h2>Bambini e genitori</h2>
+<p>Il gioco è pensato per bambini. Chiediamo di <b>non usare il vero nome e cognome</b> come soprannome e filtriamo le parole offensive. Consigliamo ai genitori di scegliere il soprannome insieme al bambino.</p>
 </section>
 
 <p><a href="./">◀ Torna al gioco</a></p>

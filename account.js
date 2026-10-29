@@ -1,67 +1,98 @@
-/* ============ ACCOUNT GENITORE, PROFILI E CLASSIFICHE ============ */
-// Raccogliamo il minimo indispensabile: l'email del genitore e, per ogni bambino,
-// solo soprannome, mascotte e progressi. Tutto ciò che condivide dati passa da un adulto.
+/* ============ SOPRANNOME E CLASSIFICHE ============ */
+// Niente email né password: ogni dispositivo ha un utente anonimo con un solo profilo.
+// Raccogliamo solo soprannome, mascotte e progressi.
 (()=>{
 const SB_URL = 'https://bvcrpovnmvcdbleoxegd.supabase.co';
 const SB_KEY = 'sb_publishable_y13b__XT2FTenM4pmMUQ5w_VTWQIlQR'; // chiave pubblica: i dati sono protetti dalle regole del database
 const sb = window.supabase ? supabase.createClient(SB_URL, SB_KEY) : null;
-const fromLink = /access_token|token_hash|code=/.test(location.hash + location.search);
 
 const EMOJI = { otto:'🦉', lia:'🦊', robi:'🤖' };
 const BAD = ['cazz','merd','stronz','puttan','troia','vaffa','fancul','coglion','minchia','porco','culo','figa','fica','sesso','sex','fuck','shit','bitch','nazi','duce','negr','frocio','ricchion','bastard','idiot','scem','deficien','suca','pirla'];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const okName = s => /^[A-Za-zÀ-ÿ0-9 _.-]{2,16}$/.test(s) && !BAD.some(w=>s.toLowerCase().replace(/[^a-zà-ÿ]/g,'').includes(w));
-const okGroup = s => s.length>=2 && s.length<=30 && !BAD.some(w=>s.toLowerCase().replace(/[^a-zà-ÿ]/g,'').includes(w));
-const errMsg = e => (e && (e.message||'').replace(/^.*?:\s*/, '')) || 'Qualcosa non ha funzionato, riprova.';
+const clean = s => s.toLowerCase().replace(/[^a-zà-ÿ]/g,'');
+const okName = s => /^[A-Za-zÀ-ÿ0-9 _.-]{2,16}$/.test(s) && !BAD.some(w=>clean(s).includes(w));
+const okGroup = s => s.length>=2 && s.length<=30 && !BAD.some(w=>clean(s).includes(w));
+const tidy = s => s.trim().replace(/\s+/g,' ');
+const TAKEN = 'Questo soprannome è già preso: scegline un altro.';
+const NICK_ERR = 'Scegli un soprannome gentile di 2-16 lettere o numeri.';
+const errMsg = e => e?.code==='23505' ? TAKEN : (e && (e.message||'').replace(/^.*?:\s*/, '')) || 'Qualcosa non ha funzionato, riprova.';
 
-let user = null, kids = [], kid = null, view = 'intro', after = null, tab = 'group';
-let groups = [], curGroup = store.get('group', null), sentTo = '';
+let nick = store.get('nick', ''), kid = null, view = 'rank', tab = 'world';
+let groups = [], curGroup = store.get('group', null);
 
-/* ---- salvataggio online dei progressi ---- */
+/* ---- profilo online ---- */
 const save = store.set;
-let syncT = null;
-store.set = (k, v)=>{ save(k, v); if(['topics','finals','char'].includes(k) && kid){ save('dirty', true); clearTimeout(syncT); syncT = setTimeout(push, 1500); } };
-async function push(){
-  if(!sb || !kid || !navigator.onLine) return;
-  const { data, error } = await sb.from('kids').update({ topics:topicsDone, finals, mascot:charId||'otto' })
-    .eq('id', kid.id).select().single();
-  if(!error){ kid = data; kids = kids.map(k=>k.id===data.id?data:k); save('dirty', false); }
-}
-window.addEventListener('online', ()=>{ if(store.get('dirty', false)) push(); });
-
 const merge = (a, b)=>{ const o = {...a}; for(const k in b) o[k] = Math.max(o[k]||0, b[k]||0); return o; };
-// Attiva un profilo: i progressi da ospite passano al primo profilo scelto, poi ognuno ha i suoi
-function useKid(k){
-  const guest = !store.get('kid', null);
-  topicsDone = guest ? merge(k.topics||{}, topicsDone) : {...(k.topics||{})};
-  finals = guest ? merge(k.finals||{}, finals) : {...(k.finals||{})};
-  if(CHARS[k.mascot]) charId = k.mascot;
-  kid = k; save('kid', k.id); save('topics', topicsDone); save('finals', finals); save('char', charId);
-  if(guest) push();
-  renderHome();
+const same = (a, b)=>JSON.stringify(a)===JSON.stringify(b);
+let ready = null;
+// Collega il dispositivo al suo profilo (lo crea la prima volta). Restituisce un errore o null.
+function ensure(){
+  if(!sb || !navigator.onLine || !nick) return Promise.resolve(null);
+  return ready ||= (async ()=>{
+    try{
+      const { data:{ session } } = await sb.auth.getSession();
+      if(!session){ const r = await sb.auth.signInAnonymously(); if(r.error) throw r.error; }
+      const { data:rows, error } = await sb.from('kids').select('*').limit(1);
+      if(error) throw error;
+      if(rows[0]){
+        kid = rows[0];
+        topicsDone = merge(kid.topics||{}, topicsDone); finals = merge(kid.finals||{}, finals);
+        save('topics', topicsDone); save('finals', finals);
+        if(!same(topicsDone, kid.topics) || !same(finals, kid.finals) || kid.mascot!==charId) await push();
+        nick = kid.nickname; save('nick', nick);
+      } else {
+        const r = await sb.from('kids').insert({ nickname:nick, mascot:charId||'otto', topics:topicsDone, finals }).select().single();
+        if(r.error) throw r.error;
+        kid = r.data;
+      }
+      renderHome();
+      return null;
+    }catch(e){ ready = null; return e; }
+  })();
 }
-function clearLocal(){
-  kid = null; kids = []; groups = []; curGroup = null;
-  save('kid', null); save('group', null); save('dirty', false);
-  topicsDone = {}; finals = {}; save('topics', topicsDone); save('finals', finals);
-  renderHome();
-}
-async function loadKids(){
-  const { data } = await sb.from('kids').select('*').order('created_at');
-  kids = data || [];
-  const k = kids.find(x=>x.id===store.get('kid', null));
-  if(k){ kid = k; if(store.get('dirty', false)) push(); else useKid(k); }
-  else if(store.get('kid', null)){ save('kid', null); }
+async function push(){
+  if(!sb || !kid || !navigator.onLine) return null;
+  const { data, error } = await sb.from('kids').update({ topics:topicsDone, finals, mascot:charId||'otto', nickname:nick })
+    .eq('id', kid.id).select().single();
+  if(!error){ kid = data; save('dirty', false); }
+  return error;
 }
 
-/* ---- finestra ---- */
+// Ogni progresso salvato sul dispositivo va anche online (con un piccolo ritardo)
+let syncT = null;
+store.set = (k, v)=>{ save(k, v); if(['topics','finals','char'].includes(k) && nick){ save('dirty', true); clearTimeout(syncT); syncT = setTimeout(()=>ensure().then(e=>{ if(!e) push(); }), 1500); } };
+window.addEventListener('online', ()=>{ ensure().then(e=>{ if(!e && store.get('dirty', false)) push(); }); });
+
+/* ---- soprannome nella prima schermata ---- */
+$('#pickGo').insertAdjacentHTML('beforebegin', `<div class="nickbox">
+  <label for="pNick">Quale soprannome vuoi usare?</label>
+  <input class="field" id="pNick" maxlength="16" autocomplete="off" placeholder="Es. Leo, Stella23" value="${esc(nick)}">
+  <p class="note">Inventa un soprannome: non usare il tuo vero nome e cognome.</p>
+  <p class="err" id="pErr"></p></div>`);
+const pNick = $('#pNick');
+const pickOk = ()=>{ $('#pickGo').disabled = tidy(pNick.value).length<2; };
+const baseRenderPick = renderPick;
+renderPick = function(){ baseRenderPick(); pickOk(); if(charId) $('#pErr').textContent = ''; };
+pickOk();
+pNick.oninput = ()=>{ $('#pErr').textContent=''; pickOk(); };
+$('#pickGo').onclick = async ()=>{
+  const n = tidy(pNick.value);
+  if(!charId) return $('#pErr').textContent = 'Prima scegli chi ti accompagna: tocca Otto, Lia o Robi.';
+  if(!okName(n)) return $('#pErr').textContent = NICK_ERR;
+  const btn = $('#pickGo'); btn.disabled = true;
+  nick = n; save('nick', nick); ready = null;
+  const e = await ensure();
+  btn.disabled = false;
+  if(e?.code==='23505'){ nick=''; save('nick', ''); return $('#pErr').textContent = TAKEN; }
+  renderHome(); show('home');   // senza connessione si gioca lo stesso: il profilo si crea più tardi
+};
+
+/* ---- finestra classifica ---- */
 document.body.insertAdjacentHTML('beforeend', '<div class="modal" id="acct"><div class="box" id="acctBox"></div></div>');
 const box = $('#acctBox'), modal = $('#acct');
 modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('show'); });
 function open(v){ view = v; modal.classList.add('show'); render(); }
 function close(){ modal.classList.remove('show'); }
-// Prima di condividere dati serve un adulto: una piccola moltiplicazione
-function gate(next){ after = next; open('gate'); }
 
 const lbRows = rows => rows.length ? `<div class="lb">${rows.map(r=>`
   <div class="it ${r.mine?'me':''}"><span class="ps">${r.pos<=3?['🥇','🥈','🥉'][r.pos-1]:r.pos}</span>
@@ -69,135 +100,75 @@ const lbRows = rows => rows.length ? `<div class="lb">${rows.map(r=>`
     <span class="nm"><b>${esc(r.nickname)}</b><small>${r.stickers} adesivi · ${r.stars} ⭐</small></span>
     <span class="pt">${r.score}</span></div>`).join('')}</div>` : '<p class="note">Ancora nessuno qui: gioca per conquistare il primo posto!</p>';
 
-async function render(){
+function render(){
   const V = {
     offline: ()=>`<h3>🏆 Classifica</h3><p class="note">Serve una connessione a internet. Riprova più tardi!</p><button class="btn big" data-x>Chiudi</button>`,
-    intro: ()=>`<h3>🏆 Classifica</h3>
-      <div class="sect"><p>Vuoi sfidare i tuoi amici e salvare i tuoi adesivi?</p>
-      <p class="note">Chiedi a mamma, papà o a un adulto di creare il tuo profilo.</p></div>
-      <button class="btn big" id="aGo">👨‍👩‍👧 Sono un adulto</button><button class="btn ghost big" data-x>Non ora</button>`,
-    gate: ()=>{ const a=6+Math.floor(Math.random()*4), b=6+Math.floor(Math.random()*4); box.dataset.g=a*b;
-      return `<h3>👋 Solo per i grandi</h3><div class="sect"><label for="gIn">Quanto fa <b>${a} × ${b}</b>?</label>
-      <input class="field" id="gIn" inputmode="numeric" autocomplete="off"><p class="err" id="aErr"></p></div>
-      <button class="btn big" id="aGo">Continua</button><button class="btn ghost big" data-x>Annulla</button>`; },
-    login: ()=>`<h3>👨‍👩‍👧 Area genitori</h3>
-      <div class="sect"><p>Entra con la tua email: ti mandiamo un link per accedere, senza password.</p>
-      <input class="field" id="aMail" type="email" autocomplete="email" placeholder="la-tua@email.it">
-      <label class="consent"><input type="checkbox" id="aOk"><span>Sono il genitore o chi ne fa le veci e ho letto l'<a href="privacy.html" target="_blank">informativa privacy</a>.</span></label>
-      <p class="note">Ai bambini chiediamo solo un soprannome: niente nomi veri, foto o altri dati.</p>
-      <p class="err" id="aErr"></p></div>
-      <button class="btn big" id="aGo">Inviami il link</button><button class="btn ghost big" data-x>Annulla</button>`,
-    sent: ()=>`<h3>📬 Controlla la posta</h3>
-      <div class="sect"><p>Abbiamo scritto a <b>${esc(sentTo)}</b>. Apri il link nell'email <b>da questo dispositivo</b>.</p>
-      <p class="note">Se l'email contiene un codice, puoi scriverlo qui:</p>
-      <input class="field" id="aCode" inputmode="numeric" autocomplete="one-time-code" placeholder="Codice">
-      <p class="err" id="aErr"></p></div>
-      <button class="btn big" id="aGo">Conferma il codice</button><button class="btn ghost big" id="aBack">Usa un'altra email</button>`,
-    kids: ()=>`<h3>🧒 Chi gioca?</h3>
-      ${kids.length?`<div class="lb">${kids.map(k=>`<button class="it ${kid&&kid.id===k.id?'me':''}" data-kid="${k.id}">
-        <span class="em">${EMOJI[k.mascot]||'🦉'}</span><span class="nm"><b>${esc(k.nickname)}</b><small>${k.stickers} adesivi · ${k.score} punti</small></span><span>▶</span></button>`).join('')}</div>`:''}
-      ${kids.length<6?`<div class="sect"><h4>➕ Nuovo profilo</h4>
-        <input class="field" id="aNick" maxlength="16" placeholder="Soprannome (es. Leo, Stella23)">
-        <p class="note">Usa un soprannome, non il nome e cognome vero: sarà visibile nelle classifiche.</p>
-        <div class="emopick">${Object.keys(CHARS).map(id=>`<button data-m="${id}" class="${id===(charId||'otto')?'on':''}" aria-label="${CHARS[id].full}">${EMOJI[id]}</button>`).join('')}</div>
-        <p class="err" id="aErr"></p><button class="btn" id="aGo">Crea profilo</button></div>`:''}
-      <button class="btn ghost big" id="aPar">⚙️ Gestisci account</button><button class="btn ghost big" data-x>Chiudi</button>`,
+    nick: ()=>`<h3>🏆 Il tuo soprannome</h3>
+      <div class="sect"><p>Scegli il nome con cui comparire in classifica.</p>
+      <input class="field" id="aNick" maxlength="16" autocomplete="off" placeholder="Es. Leo, Stella23" value="${esc(nick)}">
+      <p class="note">Inventa un soprannome: non usare il tuo vero nome e cognome.</p><p class="err" id="aErr"></p></div>
+      <button class="btn big" id="aGo">Salva</button><button class="btn ghost big" data-x>Annulla</button>`,
     rank: ()=>`<h3>🏆 Classifica</h3>
       <div class="sect row"><span class="em big">${EMOJI[kid.mascot]||'🦉'}</span><span class="grow"><b>${esc(kid.nickname)}</b><br><span class="note">${kid.stickers} adesivi · ${kid.stars} ⭐</span></span><span class="pt big">${kid.score} punti</span></div>
-      <div class="tabs"><button data-t="group" class="${tab==='group'?'on':''}">👫 Amici</button><button data-t="world" class="${tab==='world'?'on':''}">🌍 Mondo</button></div>
+      <div class="tabs"><button data-t="world" class="${tab==='world'?'on':''}">🌍 Mondo</button><button data-t="group" class="${tab==='group'?'on':''}">👫 Amici</button></div>
       <div id="aTab"><p class="note">Carico…</p></div>
       <p class="note">Punti: 10 per adesivo, +5 se è d'oro, 20 per ogni stella nelle sfide.</p>
-      <button class="btn ghost big" id="aKids">🧒 Cambia profilo</button><button class="btn big" data-x>Chiudi</button>`,
-    parent: ()=>`<h3>👨‍👩‍👧 Area genitori</h3>
-      <div class="sect"><h4>Account</h4><p class="note">${esc(user?.email)}</p></div>
-      ${kids.map(k=>`<div class="sect"><div class="row"><span class="em">${EMOJI[k.mascot]||'🦉'}</span><span class="grow"><b>${esc(k.nickname)}</b><br><span class="note">${k.score} punti</span></span>
-        <button class="btn ghost danger-t" data-del="${k.id}" style="padding:8px 14px">Elimina</button></div>
-        <div class="row"><span class="grow note">Mostra nella classifica del mondo (solo soprannome e punti)</span>
-        <button class="switch" role="switch" aria-label="Classifica del mondo" aria-checked="${k.public_rank}" data-pub="${k.id}"></button></div></div>`).join('')}
-      <div class="sect"><h4>I tuoi dati</h4>
-        <button class="btn ghost" id="aDl">⬇️ Scarica i dati</button>
+      <button class="btn big" data-x>Chiudi</button>`,
+    me: ()=>`<h3>🏆 Il mio profilo</h3>
+      <div class="sect"><div class="row"><span class="em big">${EMOJI[kid.mascot]||'🦉'}</span><span class="grow"><b>${esc(kid.nickname)}</b><br><span class="note">${kid.score} punti</span></span>
+        <button class="btn ghost" id="aRen" style="padding:8px 14px">Cambia nome</button></div>
+        <div class="row"><span class="grow note">Mostrami nella classifica del mondo</span>
+        <button class="switch" role="switch" aria-label="Classifica del mondo" aria-checked="${kid.public_rank}" id="aPub"></button></div></div>
+      <div class="sect"><h4>I miei dati</h4>
+        <p class="note">Salviamo solo soprannome, mascotte e punti.</p>
+        <button class="btn ghost" id="aDl">⬇️ Scarica i miei dati</button>
         <a class="note" href="privacy.html" target="_blank">Leggi l'informativa privacy</a></div>
-      <button class="btn ghost big" id="aOut">Esci da questo dispositivo</button>
-      <button class="btn big danger" id="aWipe">Elimina account e tutti i dati</button>
-      <button class="btn ghost big" id="aKids">◀ Profili</button>`,
+      <button class="btn big danger" id="aWipe">Cancella il mio profilo</button>
+      <button class="btn ghost big" data-x>Chiudi</button>`,
   };
   box.innerHTML = V[view]();
   box.querySelectorAll('[data-x]').forEach(b=>b.onclick=close);
   const go = $('#aGo'), err = t=>{ const e=$('#aErr'); if(e) e.textContent=t; };
-  const busy = async (btn, fn)=>{ btn.disabled=true; try{ await fn(); }catch(e){ err(errMsg(e)); } btn.disabled=false; };
 
-  if(view==='intro') go.onclick = ()=>gate(()=>open('login'));
-  if(view==='gate'){
-    $('#gIn').focus();
-    const ok = ()=>{ if(+$('#gIn').value===+box.dataset.g){ const f=after; after=null; f(); } else { err('Non è giusto, riprova.'); $('#gIn').value=''; } };
-    go.onclick = ok; $('#gIn').onkeydown = e=>{ if(e.key==='Enter') ok(); };
-  }
-  if(view==='login') go.onclick = ()=>busy(go, async ()=>{
-    const email = $('#aMail').value.trim();
-    if(!/^\S+@\S+\.\S+$/.test(email)) return err('Scrivi un indirizzo email valido.');
-    if(!$('#aOk').checked) return err("Serve la conferma del genitore e la presa visione dell'informativa.");
-    const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.origin + location.pathname } });
-    if(error) throw error;
-    sentTo = email; open('sent');
-  });
-  if(view==='sent'){
-    $('#aBack').onclick = ()=>open('login');
-    go.onclick = ()=>busy(go, async ()=>{
-      const { error } = await sb.auth.verifyOtp({ email:sentTo, token:$('#aCode').value.trim(), type:'email' });
-      if(error) throw error;
-    });
-  }
-  if(view==='kids'){
-    let m = charId || 'otto';
-    box.querySelectorAll('[data-kid]').forEach(b=>b.onclick=()=>{ useKid(kids.find(k=>k.id===b.dataset.kid)); tone('beep'); open('rank'); });
-    box.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ m=b.dataset.m; box.querySelectorAll('[data-m]').forEach(x=>x.classList.toggle('on', x===b)); });
-    $('#aPar').onclick = ()=>open('parent');
-    if(go) go.onclick = ()=>busy(go, async ()=>{
-      const nickname = $('#aNick').value.trim().replace(/\s+/g,' ');
-      if(!okName(nickname)) return err('Scegli un soprannome gentile di 2-16 lettere o numeri.');
-      const { data, error } = await sb.from('kids').insert({ nickname, mascot:m }).select().single();
-      if(error) throw error;
-      kids.push(data); useKid(data); open('rank');
-    });
+  if(view==='nick'){
+    $('#aNick').focus();
+    go.onclick = async ()=>{
+      const n = tidy($('#aNick').value);
+      if(!okName(n)) return err(NICK_ERR);
+      go.disabled = true;
+      const old = nick; nick = n; save('nick', n);
+      let e;
+      if(kid) e = await push(); else { ready = null; e = await ensure(); }
+      go.disabled = false;
+      if(e){ nick = old; save('nick', old); return err(errMsg(e)); }
+      renderHome();
+      if(kid) open('rank'); else close();
+    };
   }
   if(view==='rank'){
     box.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{ tab=b.dataset.t; render(); });
-    $('#aKids').onclick = ()=>open('kids');
     renderTab();
   }
-  if(view==='parent'){
-    $('#aKids').onclick = ()=>open('kids');
-    box.querySelectorAll('[data-pub]').forEach(b=>b.onclick=async ()=>{
-      const on = b.getAttribute('aria-checked')!=='true';
-      const { data, error } = await sb.from('kids').update({ public_rank:on }).eq('id', b.dataset.pub).select().single();
-      if(!error){ kids = kids.map(k=>k.id===data.id?data:k); if(kid?.id===data.id) kid=data; b.setAttribute('aria-checked', String(on)); }
-    });
-    box.querySelectorAll('[data-del]').forEach(b=>b.onclick=async ()=>{
-      const k = kids.find(x=>x.id===b.dataset.del);
-      if(!confirm(`Eliminare il profilo "${k.nickname}" con tutti i suoi progressi? Non si può annullare.`)) return;
-      const { error } = await sb.from('kids').delete().eq('id', k.id);
-      if(error) return alert(errMsg(error));
-      kids = kids.filter(x=>x.id!==k.id);
-      if(kid?.id===k.id) clearLocal();
-      render();
-    });
+  if(view==='me'){
+    $('#aRen').onclick = ()=>open('nick');
+    $('#aPub').onclick = async ()=>{
+      const { data, error } = await sb.from('kids').update({ public_rank:!kid.public_rank }).eq('id', kid.id).select().single();
+      if(!error){ kid = data; render(); }
+    };
     $('#aDl').onclick = async ()=>{
-      const out = { account:{ email:user.email, creato:user.created_at }, profili:[] };
-      for(const k of kids){ const { data } = await sb.rpc('my_groups', { p_kid:k.id }); out.profili.push({ ...k, gruppi:(data||[]).map(g=>({ nome:g.name, codice:g.code })) }); }
+      const { data } = await sb.rpc('my_groups', { p_kid:kid.id });
+      const out = { ...kid, gruppi:(data||[]).map(g=>({ nome:g.name, codice:g.code })) };
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type:'application/json' }));
       a.download = 'safehome-kids-dati.json'; a.click(); URL.revokeObjectURL(a.href);
     };
-    $('#aOut').onclick = async ()=>{
-      if(!confirm('Uscire? I progressi restano salvati nel tuo account.')) return;
-      await sb.auth.signOut(); clearLocal(); close();
-    };
     $('#aWipe').onclick = async ()=>{
-      if(!confirm("Eliminare l'account, tutti i profili e i progressi? Non si può annullare.")) return;
-      if(!confirm('Sei sicuro? Verranno cancellati per sempre.')) return;
+      if(!confirm('Cancellare il profilo online? Il soprannome e i punti spariranno dalle classifiche. Gli adesivi restano su questo dispositivo.')) return;
       const { error } = await sb.rpc('delete_my_account');
       if(error) return alert(errMsg(error));
-      await sb.auth.signOut(); clearLocal(); close(); alert('Account e dati eliminati.');
+      await sb.auth.signOut();
+      kid = null; nick = ''; ready = null; save('nick', ''); save('group', null); save('dirty', false);
+      close(); renderHome(); alert('Profilo cancellato.');
     };
   }
 }
@@ -205,18 +176,9 @@ async function render(){
 async function renderTab(){
   const el = $('#aTab');
   if(tab==='world'){
-    if(!kid.public_rank){
-      el.innerHTML = `<div class="sect"><p>La classifica del mondo è spenta.</p><p class="note">Un adulto può accenderla: gli altri vedranno solo il soprannome e i punti.</p>
-        <button class="btn" id="aPub">Accendi (per i grandi)</button></div>`;
-      $('#aPub').onclick = ()=>gate(async ()=>{
-        const { data } = await sb.from('kids').update({ public_rank:true }).eq('id', kid.id).select().single();
-        if(data){ kid = data; kids = kids.map(k=>k.id===data.id?data:k); }
-        tab = 'world'; open('rank');
-      });
-      return;
-    }
     const { data, error } = await sb.rpc('leaderboard_global');
-    el.innerHTML = error ? `<p class="err">${esc(errMsg(error))}</p>` : lbRows(data);
+    el.innerHTML = (kid.public_rank ? '' : '<p class="note">Non compari nella classifica del mondo: puoi cambiarlo in ⚙️ → Il mio profilo.</p>')
+      + (error ? `<p class="err">${esc(errMsg(error))}</p>` : lbRows(data));
     return;
   }
   const { data } = await sb.rpc('my_groups', { p_kid:kid.id });
@@ -233,56 +195,53 @@ async function renderTab(){
   } else html += `<p class="note">Crea un gruppo con la famiglia, gli amici o la classe, oppure entra con il codice che ti hanno dato.</p>`;
   html += `<div class="sect"><h4>Entra in un gruppo</h4><div class="row"><input class="field" id="aJoin" maxlength="6" placeholder="CODICE" autocapitalize="characters"><button class="btn" id="aJoinGo">Entra</button></div>
     <h4>Crea un gruppo</h4><div class="row"><input class="field" id="aNew" maxlength="30" placeholder="Es. Famiglia Rossi, 3ªB"><button class="btn" id="aNewGo">Crea</button></div>
-    <p class="note">Serve un adulto per entrare o creare un gruppo.</p><p class="err" id="aErr"></p></div>`;
+    <p class="err" id="aErr"></p></div>`;
   el.innerHTML = html;
   const err = t=>{ $('#aErr').textContent=t; };
   el.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{ curGroup=b.dataset.g; renderTab(); });
   if(g){
     $('#aShare').onclick = ()=>{
-      const text = `Gioca con noi su SafeHome Kids! Entra nel gruppo "${g.name}" con il codice ${g.code}`;
+      const text = `Gioca con me su SafeHome Kids! Entra nel gruppo "${g.name}" con il codice ${g.code}`;
       if(navigator.share) navigator.share({ text, url:'https://safehome-kids.netlify.app' }).catch(()=>{});
       else { navigator.clipboard?.writeText(`${text}: https://safehome-kids.netlify.app`); alert('Invito copiato! Incollalo in un messaggio.'); }
     };
     $('#aLeave').onclick = async ()=>{ if(!confirm(`Uscire dal gruppo "${g.name}"?`)) return; await sb.rpc('leave_group', { p_group:g.id, p_kid:kid.id }); curGroup=null; renderTab(); };
   }
-  $('#aJoinGo').onclick = ()=>{
+  const pickGroup = async code=>{ curGroup = (await sb.rpc('my_groups', { p_kid:kid.id })).data?.find(x=>x.code===code)?.id || null; renderTab(); };
+  $('#aJoinGo').onclick = async ()=>{
     const code = $('#aJoin').value.trim().toUpperCase();
     if(code.length!==6) return err('Il codice ha 6 caratteri.');
-    gate(async ()=>{ open('rank'); const { error } = await sb.rpc('join_group', { p_code:code, p_kid:kid.id }); if(error) return setTimeout(()=>err(errMsg(error)), 300); curGroup=null; renderTab(); });
+    const { error } = await sb.rpc('join_group', { p_code:code, p_kid:kid.id });
+    if(error) return err(errMsg(error));
+    pickGroup(code);
   };
-  $('#aNewGo').onclick = ()=>{
-    const name = $('#aNew').value.trim();
+  $('#aNewGo').onclick = async ()=>{
+    const name = tidy($('#aNew').value);
     if(!okGroup(name)) return err('Scegli un nome gentile di 2-30 caratteri.');
-    gate(async ()=>{ open('rank'); const { data, error } = await sb.rpc('create_group', { p_name:name, p_kid:kid.id }); if(error) return setTimeout(()=>err(errMsg(error)), 300);
-      curGroup = (await sb.rpc('my_groups', { p_kid:kid.id })).data?.find(x=>x.code===data)?.id || null; renderTab(); });
+    const { data, error } = await sb.rpc('create_group', { p_name:name, p_kid:kid.id });
+    if(error) return err(errMsg(error));
+    pickGroup(data);
   };
 }
 
 /* ---- pulsanti nell'app ---- */
-function openRank(){
+async function openIn(v){
   if(!sb || !navigator.onLine) return open('offline');
-  if(!user) return open('intro');
-  open(kid ? 'rank' : 'kids');
+  if(!nick) return open('nick');
+  const e = await ensure();
+  if(e?.code==='23505'){ open('nick'); return $('#aErr').textContent = TAKEN; }
+  if(e || !kid) return open('offline');
+  open(v);
 }
-$('#rankBtn').onclick = openRank;
-$('#parentBtn').onclick = ()=>{ $('#settings').classList.remove('show'); if(!sb || !navigator.onLine) return open('offline'); gate(()=>open(user ? 'parent' : 'login')); };
+$('#rankBtn').onclick = ()=>openIn('rank');
+$('#parentBtn').onclick = ()=>{ $('#settings').classList.remove('show'); openIn('me'); };
 
 // Nella testata mostriamo chi sta giocando
 const baseRenderHome = renderHome;
-renderHome = function(){ baseRenderHome(); if(kid) $('#hSub').textContent = `${kid.nickname} · ${stickerCount()} adesivi`; };
+renderHome = function(){ baseRenderHome(); if(nick) $('#hSub').textContent = `${nick} · ${stickerCount()} adesivi`; };
+renderHome();
 
-if(sb){
-  let seen = null;
-  sb.auth.onAuthStateChange((ev, session)=>{
-    const u = session?.user || null;
-    if((u?.id||null) === seen) return;
-    seen = u?.id || null; user = u;
-    // il caricamento avviene fuori dalla callback, come consigliato da Supabase
-    setTimeout(async ()=>{
-      if(!user){ if(store.get('kid', null)) clearLocal(); return; }
-      await loadKids();
-      if(!kid && (fromLink || modal.classList.contains('show'))) open('kids');
-    }, 0);
-  });
-}
+// Chi giocava già prima delle classifiche sceglie il soprannome al primo avvio
+if(charId && !nick) setTimeout(()=>open('nick'), 800);
+else ensure();
 })();
