@@ -75,7 +75,8 @@ h1,h2,h3,h4,p{margin:0}
 .minichars .char b{font-size:1rem}
 
 /* ---------- casa 3D ---------- */
-#home{position:relative;height:100dvh;min-height:0;overflow:hidden;background:#BFE9FF}
+/* la home è fissata allo schermo: niente scroll da ripristinare al ricaricamento */
+#home{position:fixed;inset:0;height:auto;min-height:0;overflow:hidden;background:#BFE9FF}
 #h3d{position:absolute;inset:0}
 .h3d-canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .h3d-canvas:active{cursor:grabbing}
@@ -113,7 +114,7 @@ h1,h2,h3,h4,p{margin:0}
 .bar{height:12px;border-radius:99px;background:#F1E6D4;border:2px solid var(--ink);overflow:hidden;margin:4px 0 2px}
 .bar i{display:block;height:100%;background:var(--teal);border-radius:99px;transition:width .6s cubic-bezier(.4,1.4,.5,1)}
 #homeList{display:none}
-.no3d #home{height:auto;min-height:100dvh;overflow:visible;background:transparent}
+.no3d #home{position:relative;inset:auto;height:auto;min-height:100dvh;overflow:visible;background:transparent}
 .no3d #h3d,.no3d .floors,.no3d .hcard,.no3d #listBtn{display:none}
 .no3d .hbar{position:static;padding:14px 16px 0;max-width:640px;margin:0 auto;width:100%}
 .no3d #homeList{display:block;padding:16px 16px 30px;max-width:640px;margin:0 auto;width:100%}
@@ -1298,6 +1299,7 @@ initHome();
 if(charId){ renderHome(); show('home'); } else { renderPick(); show('pick'); }
 
 /* ============ APP INSTALLABILE ============ */
+if('scrollRestoration' in history) history.scrollRestoration='manual';
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 // Dal telefono, se l'app non è già installata, proponiamo di metterla sulla schermata Home
 (()=>{
