@@ -103,6 +103,8 @@ const lbRows = rows => rows.length ? `<div class="lb">${rows.map(r=>`
 function render(){
   const V = {
     offline: ()=>`<h3>🏆 Classifica</h3><p class="note">Serve una connessione a internet. Riprova più tardi!</p><button class="btn big" data-x>Chiudi</button>`,
+    wait: ()=>`<h3>🏆 Classifica</h3><p class="note">Un attimo, sto caricando…</p><button class="btn ghost big" data-x>Chiudi</button>`,
+    down: ()=>`<h3>🏆 Classifica</h3><p class="note">La classifica ora non risponde. Puoi continuare a giocare: i progressi restano salvati e si aggiornano più tardi.</p><button class="btn big" data-x>Chiudi</button>`,
     nick: ()=>`<h3>🏆 Il tuo soprannome</h3>
       <div class="sect"><p>Scegli il nome con cui comparire in classifica.</p>
       <input class="field" id="aNick" maxlength="16" autocomplete="off" placeholder="Es. Leo, Stella23" value="${esc(nick)}">
@@ -228,9 +230,12 @@ async function renderTab(){
 async function openIn(v){
   if(!sb || !navigator.onLine) return open('offline');
   if(!nick) return open('nick');
-  const e = await ensure();
+  if(!kid) open('wait');
+  // se il server non risponde entro 8 secondi lo diciamo, invece di lasciare il pulsante muto
+  const e = await Promise.race([ensure(), new Promise(r=>setTimeout(()=>r({ timeout:true }), 8000))]);
+  if(view==='wait' && !modal.classList.contains('show')) return; // chiusa durante l'attesa
   if(e?.code==='23505'){ open('nick'); return $('#aErr').textContent = TAKEN; }
-  if(e || !kid) return open('offline');
+  if(e || !kid) return open('down');
   open(v);
 }
 $('#rankBtn').onclick = ()=>openIn('rank');
